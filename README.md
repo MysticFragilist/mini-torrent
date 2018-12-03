@@ -21,10 +21,10 @@ The client needs to launch `./mtor-client.py file.mtr 3000` followed by the **.m
 
 ### Features & Future upgrade
 Some future feature that could be made:
-- Make a **pickle** serializable for block sending
-- Make a **loading screen** for a better visual
-- Add more verification & bug fix
-
+- [ ] Make a **pickle** serializable for block sending
+- [x] Make a **loading screen** for a better visual
+- [ ] Add more verification & bug fix
+- [ ] Add Windows compatibility
 
 
 
