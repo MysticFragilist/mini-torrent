@@ -41,15 +41,15 @@ class serverThread():
             raise Exception('Client disconnected')
         
         
-        #print(os.path.isfile("./{0}/{1}".format(sys.argv[1], self.fileName)))
-        if os.path.isfile("./{0}/{1}".format(sys.argv[1], self.fileName)):
+        #print(os.path.isfile("{0}/{1}".format(sys.argv[1], self.fileName)))
+        if os.path.isfile("{0}/{1}".format(sys.argv[1], self.fileName)):
             #send READY
             clientSock.send(str.encode("READY"))
             #self.BlockSend()
             anotherBlock = True
             while anotherBlock:
                 #reading of the block
-
+		clientSock.send(str.encode("READY"))
                 print("Waiting for next block")
                 #RECEIVING
                 mes = clientSock.recv(4096).decode()
@@ -62,7 +62,7 @@ class serverThread():
 
                     lock.acquire()
 
-                    fic = open("./{0}/{1}".format(sys.argv[1], self.fileName), "rb")
+                    fic = open("{0}/{1}".format(sys.argv[1], self.fileName), "rb")
                     fic.seek(int(offset))
                     toSend = fic.read(int(size))
                     fic.close()

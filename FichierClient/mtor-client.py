@@ -130,6 +130,11 @@ def ThreadDownload(ip, filename, transfertID):
     
 
     if mes == "READY":
+	
+	#Wait for the readiness of the server
+	#It will send READY when it is
+	ready = sockClient.recv(MAX_SIZE_PACKET).decode()
+
         #ReceiveNWrite(sockClient, lock, fichier)
         lock.acquire()
         restant = len(BlockList)
