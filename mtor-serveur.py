@@ -106,8 +106,7 @@ class serverThread():
                 lock.release()
                 
                 self.socket.send(toSend)
-	list[0]
-
+	
 def main():
     if not len(sys.argv) == 3:
         print("Usage: mtor-serveur.py <folder name> <port>")
