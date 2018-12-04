@@ -130,18 +130,18 @@ def ThreadDownload(ip, filename, transfertID):
     
 
     if mes == "READY":
-	
-	#Wait for the readiness of the server
-	#It will send READY when it is
-	ready = sockClient.recv(MAX_SIZE_PACKET).decode()
 
+        
         #ReceiveNWrite(sockClient, lock, fichier)
         lock.acquire()
         restant = len(BlockList)
-        
         lock.release()
 
         while restant > 0:
+            #Wait for the readiness of the server
+            #It will send READY when it is
+            #ready = sockClient.recv(MAX_SIZE_PACKET).decode()
+
             #remove the block to send
             lock.acquire()
             #(offset, size)
@@ -173,7 +173,7 @@ def ThreadDownload(ip, filename, transfertID):
 
                 #set for the next loop
                 restant = len(BlockList)
-                print(restant)
+                #print(restant)
                 lock.release()
                 #loadingScreen(filename, ip)
 
@@ -238,7 +238,7 @@ def main():
         
     
     #start the loading UI thread
-    #Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
+    Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
     
 
 if __name__ == "__main__":
