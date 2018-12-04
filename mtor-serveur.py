@@ -50,7 +50,7 @@ class serverThread():
             while anotherBlock:
                 #reading of the block
                 #send verification before accepting next block
-                clientSock.send(str.encode("READY"))
+                #clientSock.send(str.encode("READY"))
 
 
                 print("Waiting for next block")
@@ -58,19 +58,17 @@ class serverThread():
                 mes = clientSock.recv(4096).decode()
                 print("New Block arrived, started transferring...")
                 anotherBlock = not mes == "NO BLOCK"    
-
+                print(anotherBlock, endl="\n")
+                
                 if anotherBlock:
                     print(mes)
                     offset, size = mes.split(';')
-
-                    lock.acquire()
 
                     fic = open("{0}/{1}".format(sys.argv[1], self.fileName), "rb")
                     fic.seek(int(offset))
                     toSend = fic.read(int(size))
                     fic.close()
 
-                    lock.release()
 
                     print("Sending data block : ({0}, {1})".format(offset, size))
                     #SENDING

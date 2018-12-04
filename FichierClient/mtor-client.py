@@ -127,6 +127,7 @@ def ThreadDownload(ip, filename, transfertID):
 
     #recv the READY tag or the error
     mes = sockClient.recv(4096).decode()
+    print(mes, end="\n")
     
 
     if mes == "READY":
@@ -145,7 +146,9 @@ def ThreadDownload(ip, filename, transfertID):
             #remove the block to send
             lock.acquire()
             #(offset, size)
+            #print(BlockList)
             offset, size = BlockList.pop(0)
+            print(offset)
             lock.release()
             
             #print(blockToSend)
@@ -154,7 +157,7 @@ def ThreadDownload(ip, filename, transfertID):
             
             sockClient.send(str.encode("{0};{1}".format(offset, size)))
             #RECEIVING
-            data = sockClient.recv(MAX_SIZE_PACKET + 1)
+            data = sockClient.recv(size)
             
             #verify wether server is still connected
             if data != b"":
@@ -228,7 +231,7 @@ def main():
     
     nbThread = 0
     for ip in IPServers:
-        # (Thread , ("ip", port))
+        # ("ip", port)
         
         TransfertSpeed.append(0)
         ThreadList.append(Thread(target=ThreadDownload, args=(ip, fileName, nbThread), name=ip[0]))
@@ -238,7 +241,7 @@ def main():
         
     
     #start the loading UI thread
-    Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
+    #Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
     
 
 if __name__ == "__main__":
