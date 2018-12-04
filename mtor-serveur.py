@@ -57,6 +57,7 @@ class serverThread():
                 anotherBlock = not mes == "NO BLOCK"    
 
                 if anotherBlock:
+                    print(mes)
                     offset, size = mes.split(';')
 
                     lock.acquire()
