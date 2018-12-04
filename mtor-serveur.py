@@ -49,7 +49,10 @@ class serverThread():
             anotherBlock = True
             while anotherBlock:
                 #reading of the block
-		clientSock.send(str.encode("READY"))
+                #send verification before accepting next block
+                clientSock.send(str.encode("READY"))
+
+
                 print("Waiting for next block")
                 #RECEIVING
                 mes = clientSock.recv(4096).decode()
@@ -103,6 +106,7 @@ class serverThread():
                 lock.release()
                 
                 self.socket.send(toSend)
+	list[0]
 
 def main():
     if not len(sys.argv) == 3:
