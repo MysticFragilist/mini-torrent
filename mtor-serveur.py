@@ -58,7 +58,7 @@ class serverThread():
                 mes = clientSock.recv(4096).decode()
                 print("New Block arrived, started transferring...")
                 anotherBlock = not mes == "NO BLOCK"    
-                print(anotherBlock, endl="\n")
+                print(anotherBlock, end="\n")
                 
                 if anotherBlock:
                     print(mes)
