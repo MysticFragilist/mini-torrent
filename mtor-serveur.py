@@ -15,7 +15,7 @@ class serverThread():
         
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.host = "127.0.0.1"  # socket.gethostname()
+        self.host = ""  # socket.gethostname()
         self.socket.bind((self.host, int(self.port)))
     
     
