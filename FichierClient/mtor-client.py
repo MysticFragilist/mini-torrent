@@ -11,18 +11,17 @@ import Utils
 
 REFRESH_LOADING_RATE = 0.25
 NB_BLOCK_TOTAL = 0
-MAX_SIZE_PACKET = 32768
+MAX_SIZE_PACKET = 4096
 
 BlockList = []
 
-#the list of tuple containing ("ip", port)
-IPServers = []
-#the transfert speed in bytes for each Thread [th1Speed, th2Speed, ...]
-TransfertSpeed = []
+
 
 #the list of tuple Thread
 ThreadList = []
 lock = Lock()
+
+restant = 0
 
 #distribute the block over 12 block minimum
 #It will make more if each one is superior to 
@@ -110,45 +109,40 @@ def loadingScreen(filename, IPServers, size):
 
 
 #function of the launching thread
-def ThreadDownload(ip, filename, transfertID):
+
+def ThreadDownload(ip, filename, size):
     global lock
-    global TransfertSpeed
+    global restant
 
     try:
         sockClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sockClient.connect(ip)
-    except ConnectionError as e:
+    except:
         return
     #Communicate file name
     
     sockClient.send(str.encode(filename))
 
-    
-
     #recv the READY tag or the error
     mes = sockClient.recv(4096).decode()
+    
     print(mes, end="\n")
     
-
     if mes == "READY":
 
-        
         #ReceiveNWrite(sockClient, lock, fichier)
         lock.acquire()
-        restant = len(BlockList)
+        restant = size
         lock.release()
 
         while restant > 0:
-            #Wait for the readiness of the server
-            #It will send READY when it is
-            #ready = sockClient.recv(MAX_SIZE_PACKET).decode()
 
             #remove the block to send
             lock.acquire()
             #(offset, size)
             #print(BlockList)
             offset, size = BlockList.pop(0)
-            print(offset)
+            #print(offset)
             lock.release()
             
             #print(blockToSend)
@@ -158,7 +152,13 @@ def ThreadDownload(ip, filename, transfertID):
             sockClient.send(str.encode("{0};{1}".format(offset, size)))
             #RECEIVING
             data = sockClient.recv(size)
-            
+
+            #if data is not entirely red before quiting the function
+            #We read the rest of the data and appending it to the other one
+            while len(data) < size:
+                restData = sockClient.recv(size - len(data))
+                data = data + restData
+
             #verify wether server is still connected
             if data != b"":
                 #reparse the file
@@ -175,13 +175,11 @@ def ThreadDownload(ip, filename, transfertID):
                 fichier.close()
 
                 #set for the next loop
-                restant = len(BlockList)
-                #print(restant)
+                restant = restant - len(data)
                 lock.release()
                 #loadingScreen(filename, ip)
 
             #if the data is empty, means that the connection is lost
-                
 
         #finish the server
         #SENDING
@@ -192,10 +190,11 @@ def ThreadDownload(ip, filename, transfertID):
         print(mes)
         sockClient.close()
 
-
 def main():
+    #the list of tuple containing ("ip", port)
+    IPServers = []
+    
     if len(sys.argv) != 3:
-
         print ("Usage: mtor-client.py <file name> <Port>\nExiting ...")
         sys.exit(1)
 
@@ -208,7 +207,6 @@ def main():
         sys.exit(1)
     fileName = ""
     taille = 0
-    
 
     file = open(sys.argv[1])
     
@@ -233,16 +231,13 @@ def main():
     for ip in IPServers:
         # ("ip", port)
         
-        TransfertSpeed.append(0)
-        ThreadList.append(Thread(target=ThreadDownload, args=(ip, fileName, nbThread), name=ip[0]))
+        ThreadList.append(Thread(target=ThreadDownload, args=(ip, fileName, taille), name=ip[0]))
         ThreadList[-1].start()
         
         nbThread = nbThread + 1
-        
     
     #start the loading UI thread
-    #Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
-    
+    Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
 
 if __name__ == "__main__":
     main()

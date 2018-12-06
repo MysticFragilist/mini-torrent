@@ -9,7 +9,7 @@ from threading import Thread, Lock
 clientThreadList = []
 lock = Lock()
 
-class serverThread():
+class server():
 
     def __init__(self, port):
         
@@ -48,14 +48,11 @@ class serverThread():
             #self.BlockSend()
             anotherBlock = True
             while anotherBlock:
-                #reading of the block
-                #send verification before accepting next block
-                #clientSock.send(str.encode("READY"))
-
 
                 print("Waiting for next block")
                 #RECEIVING
                 mes = clientSock.recv(4096).decode()
+                
                 print("New Block arrived, started transferring...")
                 anotherBlock = not mes == "NO BLOCK"    
                 print(anotherBlock, end="\n")
@@ -109,7 +106,7 @@ def main():
     if not len(sys.argv) == 3:
         print("Usage: mtor-serveur.py <folder name> <port>")
     else:
-        serverThread(sys.argv[2]).listenForClients()
+        server(sys.argv[2]).listenForClients()
 
 
 if __name__ == "__main__":
