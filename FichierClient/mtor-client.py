@@ -166,26 +166,25 @@ def ThreadDownload(ip, filename, sizeTotal):
                     restData = sockClient.recv(size - len(data))
                     data = data + restData
 
-                #verify wether server is still connected
-                if data != b"":
-                    #reparse the file
-                    if len(data) < size:
+                    #verify wether server is still connected
+                    if data != b"":
+                        #reparse the file
                         newOffset = offset + len(data)
                         newSize = size - len(data)
                         BlockList.append((newOffset, newSize))
+                
+                lock.acquire()
 
-                    lock.acquire()
+                #Write data
+                fichier = open(filename, "rb+")
+                fichier.seek(offset)
+                fichier.write(data)
+                fichier.close()
 
-                    #Write data
-                    fichier = open(filename, "rb+")
-                    fichier.seek(offset)
-                    fichier.write(data)
-                    fichier.close()
+                #set for the next loop
 
-                    #set for the next loop
-
-                    restant = restant - len(data)
-                    lock.release()
+                restant = restant - len(data)
+                lock.release()
 
             else:
                 #wait for the last thread to complete his task
