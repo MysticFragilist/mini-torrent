@@ -11,16 +11,15 @@ import Utils
 
 REFRESH_LOADING_RATE = 0.25
 NB_BLOCK_TOTAL = 0
-MAX_SIZE_PACKET = 65536
+
+MAX_SIZE_PACKET = 4096
 
 BlockList = []
-
-#the list of tuple containing ("ip", port)
-IPServers = []
 
 #the list of tuple Thread
 ThreadList = []
 lock = Lock()
+restant = 0
 
 #====================================================================================
 #                                                                                   =
@@ -28,7 +27,6 @@ lock = Lock()
 #is superior to the maximum size.                                                   =
 #                                                                                   =
 #====================================================================================
-#
 def distributeBlocks(sizeTotal):
     global NB_BLOCK_TOTAL
     sizeLeft = sizeTotal
@@ -123,29 +121,27 @@ def loadingScreen(filename, IPServers, size):
 #====================================================================================
 def ThreadDownload(ip, filename, transfertID):
     global lock
+    global restant
 
     try:
         sockClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sockClient.connect(ip)
-    except ConnectionError as e:
+    except:
         return
 
     #Communicate file name
     sockClient.send(str.encode(filename))
 
-    
-
     #recv the READY tag or the error
     mes = sockClient.recv(4096).decode()
+    
     print(mes, end="\n")
     
-
     if mes == "READY":
 
-        
         #ReceiveNWrite(sockClient, lock, fichier)
         lock.acquire()
-        restant = len(BlockList)
+        restant = size
         lock.release()
 
         while restant > 0:
@@ -162,7 +158,12 @@ def ThreadDownload(ip, filename, transfertID):
             
             #RECEIVING
             data = sockClient.recv(size)
-            print(offset)
+
+            #if data is not entirely red before quiting the function
+            #We read the rest of the data and appending it to the other one
+            while len(data) < size:
+                restData = sockClient.recv(size - len(data))
+                data = data + restData
 
             #verify wether server is still connected
             if data != b"":
@@ -181,7 +182,8 @@ def ThreadDownload(ip, filename, transfertID):
                 fichier.close()
 
                 #set for the next loop
-                restant = len(BlockList)
+
+                restant = restant - len(data)
                 lock.release()
 
             #if the data is empty, means that the connection is lost
@@ -194,16 +196,19 @@ def ThreadDownload(ip, filename, transfertID):
         print(mes)
         sockClient.close()
 
-
 #====================================================================================
 #                                                                                   =
 #The main programs launch at the start.                                             =
 #                                                                                   =
 #====================================================================================
 def main():
+
+
+    #the list of tuple containing ("ip", port)
+    IPServers = []
+
     #start verification
     if len(sys.argv) != 3:
-
         print ("Usage: mtor-client.py <file name> <Port>\nExiting ...")
         sys.exit(1)
 
@@ -216,7 +221,6 @@ def main():
         sys.exit(1)
     fileName = ""
     taille = 0
-    
 
     file = open(sys.argv[1])
     
@@ -240,16 +244,13 @@ def main():
     nbThread = 0
     for ipTuple in IPServers:
         # each ipTuple is formatted this way : ("ip", port)
-        
         ThreadList.append(Thread(target=ThreadDownload, args=(ipTuple, fileName, nbThread), name=ipTuple[0]))
         ThreadList[-1].start()
         
         nbThread = nbThread + 1
-        
     
     #start the loading UI thread
-    #Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
-    
+    Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
 
 if __name__ == "__main__":
     main()
