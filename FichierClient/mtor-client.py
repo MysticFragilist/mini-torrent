@@ -11,22 +11,24 @@ import Utils
 
 REFRESH_LOADING_RATE = 0.25
 NB_BLOCK_TOTAL = 0
-MAX_SIZE_PACKET = 32768
+MAX_SIZE_PACKET = 65536
 
 BlockList = []
 
 #the list of tuple containing ("ip", port)
 IPServers = []
-#the transfert speed in bytes for each Thread [th1Speed, th2Speed, ...]
-TransfertSpeed = []
 
 #the list of tuple Thread
 ThreadList = []
 lock = Lock()
 
-#distribute the block over 12 block minimum
-#It will make more if each one is superior to 
-#the maximum size
+#====================================================================================
+#                                                                                   =
+#distribute the block over 12 block minimum it will make more if each one           =
+#is superior to the maximum size.                                                   =
+#                                                                                   =
+#====================================================================================
+#
 def distributeBlocks(sizeTotal):
     global NB_BLOCK_TOTAL
     sizeLeft = sizeTotal
@@ -48,7 +50,12 @@ def distributeBlocks(sizeTotal):
 
     NB_BLOCK_TOTAL = len(BlockList)
 
-#The loading screen UI launched from another thread
+
+#====================================================================================
+#                                                                                   =
+#The loading screen UI launched from another thread.                                =
+#                                                                                   =
+#====================================================================================
 def loadingScreen(filename, IPServers, size):
     Finished = False
     Error = 0
@@ -108,19 +115,22 @@ def loadingScreen(filename, IPServers, size):
         print("Connection Timed out with all servers\nExiting ...")
         sys.exit(1)
 
-
-#function of the launching thread
+#====================================================================================
+#                                                                                   =
+#function of the launching thread, the connection and the download from the servers =
+#are made in this method.                                                           =
+#                                                                                   =
+#====================================================================================
 def ThreadDownload(ip, filename, transfertID):
     global lock
-    global TransfertSpeed
 
     try:
         sockClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sockClient.connect(ip)
     except ConnectionError as e:
         return
+
     #Communicate file name
-    
     sockClient.send(str.encode(filename))
 
     
@@ -139,26 +149,21 @@ def ThreadDownload(ip, filename, transfertID):
         lock.release()
 
         while restant > 0:
-            #Wait for the readiness of the server
-            #It will send READY when it is
-            #ready = sockClient.recv(MAX_SIZE_PACKET).decode()
 
             #remove the block to send
             lock.acquire()
-            #(offset, size)
-            #print(BlockList)
+
             offset, size = BlockList.pop(0)
-            print(offset)
+
             lock.release()
             
-            #print(blockToSend)
-            #print(sockClient)
             #SENDING
-            
             sockClient.send(str.encode("{0};{1}".format(offset, size)))
+            
             #RECEIVING
             data = sockClient.recv(size)
-            
+            print(offset)
+
             #verify wether server is still connected
             if data != b"":
                 #reparse the file
@@ -168,6 +173,7 @@ def ThreadDownload(ip, filename, transfertID):
                     BlockList.append((newOffset, newSize))
 
                 lock.acquire()
+
                 #Write data
                 fichier = open(filename, "rb+")
                 fichier.seek(offset)
@@ -176,16 +182,12 @@ def ThreadDownload(ip, filename, transfertID):
 
                 #set for the next loop
                 restant = len(BlockList)
-                #print(restant)
                 lock.release()
-                #loadingScreen(filename, ip)
 
             #if the data is empty, means that the connection is lost
-                
 
         #finish the server
         #SENDING
-        #loadingScreen(filename, ip)
         sockClient.send(str.encode("NO BLOCK"))
 
     else:
@@ -193,7 +195,13 @@ def ThreadDownload(ip, filename, transfertID):
         sockClient.close()
 
 
+#====================================================================================
+#                                                                                   =
+#The main programs launch at the start.                                             =
+#                                                                                   =
+#====================================================================================
 def main():
+    #start verification
     if len(sys.argv) != 3:
 
         print ("Usage: mtor-client.py <file name> <Port>\nExiting ...")
@@ -230,11 +238,10 @@ def main():
     newFic.close()
     
     nbThread = 0
-    for ip in IPServers:
-        # ("ip", port)
+    for ipTuple in IPServers:
+        # each ipTuple is formatted this way : ("ip", port)
         
-        TransfertSpeed.append(0)
-        ThreadList.append(Thread(target=ThreadDownload, args=(ip, fileName, nbThread), name=ip[0]))
+        ThreadList.append(Thread(target=ThreadDownload, args=(ipTuple, fileName, nbThread), name=ipTuple[0]))
         ThreadList[-1].start()
         
         nbThread = nbThread + 1
