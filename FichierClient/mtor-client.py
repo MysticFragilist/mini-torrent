@@ -119,7 +119,7 @@ def loadingScreen(filename, IPServers, size):
 #are made in this method.                                                           =
 #                                                                                   =
 #====================================================================================
-def ThreadDownload(ip, filename, transfertID):
+def ThreadDownload(ip, filename, sizeTotal):
     global lock
     global restant
 
@@ -141,50 +141,55 @@ def ThreadDownload(ip, filename, transfertID):
 
         #ReceiveNWrite(sockClient, lock, fichier)
         lock.acquire()
-        restant = size
+        restant = sizeTotal
         lock.release()
 
         while restant > 0:
-
-            #remove the block to send
-            lock.acquire()
-
-            offset, size = BlockList.pop(0)
-
-            lock.release()
             
-            #SENDING
-            sockClient.send(str.encode("{0};{1}".format(offset, size)))
-            
-            #RECEIVING
-            data = sockClient.recv(size)
-
-            #if data is not entirely red before quiting the function
-            #We read the rest of the data and appending it to the other one
-            while len(data) < size:
-                restData = sockClient.recv(size - len(data))
-                data = data + restData
-
-            #verify wether server is still connected
-            if data != b"":
-                #reparse the file
-                if len(data) < size:
-                    newOffset = offset + len(data)
-                    newSize = size - len(data)
-                    BlockList.append((newOffset, newSize))
-
+            if len(BlockList) != 0:
+                #remove the block to send
                 lock.acquire()
 
-                #Write data
-                fichier = open(filename, "rb+")
-                fichier.seek(offset)
-                fichier.write(data)
-                fichier.close()
+                offset, size = BlockList.pop(0)
 
-                #set for the next loop
-
-                restant = restant - len(data)
                 lock.release()
+                
+                #SENDING
+                sockClient.send(str.encode("{0};{1}".format(offset, size)))
+                
+                #RECEIVING
+                data = sockClient.recv(size)
+
+                #if data is not entirely red before quiting the function
+                #We read the rest of the data and appending it to the other one
+                while len(data) < size:
+                    restData = sockClient.recv(size - len(data))
+                    data = data + restData
+
+                #verify wether server is still connected
+                if data != b"":
+                    #reparse the file
+                    if len(data) < size:
+                        newOffset = offset + len(data)
+                        newSize = size - len(data)
+                        BlockList.append((newOffset, newSize))
+
+                    lock.acquire()
+
+                    #Write data
+                    fichier = open(filename, "rb+")
+                    fichier.seek(offset)
+                    fichier.write(data)
+                    fichier.close()
+
+                    #set for the next loop
+
+                    restant = restant - len(data)
+                    lock.release()
+
+            else:
+                #wait for the last thread to complete his task
+                time.sleep(1)
 
             #if the data is empty, means that the connection is lost
 
@@ -244,13 +249,13 @@ def main():
     nbThread = 0
     for ipTuple in IPServers:
         # each ipTuple is formatted this way : ("ip", port)
-        ThreadList.append(Thread(target=ThreadDownload, args=(ipTuple, fileName, nbThread), name=ipTuple[0]))
+        ThreadList.append(Thread(target=ThreadDownload, args=(ipTuple, fileName, taille), name=ipTuple[0]))
         ThreadList[-1].start()
         
         nbThread = nbThread + 1
     
     #start the loading UI thread
-    Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
+    #Thread(target=loadingScreen, args=(fileName, IPServers, taille), name="LoadingUI").start()
 
 if __name__ == "__main__":
     main()

@@ -52,7 +52,7 @@ class server():
                 print("Waiting for next block")
                 #RECEIVING
                 mes = clientSock.recv(4096).decode()
-                
+                print(mes)
                 print("New Block arrived, started transferring...")
                 anotherBlock = not mes == "NO BLOCK"
                 print(anotherBlock, end="\n")
