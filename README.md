@@ -13,7 +13,7 @@ some_file.txt
 A .mtr file must be formatted as above. It must start with the file name to download from the servers. Next line needs to be the size of the file in bytes. The following lines are for the servers IP in which the file could be.
 
 ### Usage
-Servers need to run the file `./mtor-serveur.py` to makes the torrent working. From the server, the command needs to be called this way `./mtor-serveur.py fileServer/ 3000`. It must be followed by the **directory** in which the server will take his file from and the **port number** on which it needs to be run.
+Servers need to run the file `./mtor-serveur.py` to makes the torrent working. From the server, the command needs to be called this way `./mtor-serveur.py /path/to/directory/ 3000`. It must be followed by the **directory** in which the server will take his file from and the **port number** on which it needs to be run.
 
 
 The client needs to launch `./mtor-client.py file.mtr 3000` followed by the **.mtr file** and the **port on the server** where the server is hosting itself.
@@ -29,5 +29,5 @@ Some future feature that could be made:
 
 
 ##### -- Copyright --
-This project is protected by the MIT Licence.
+This project is under the MIT Licence.
 This project has been done in an educational purpose for a class in TCP/socket at Bois-de-Boulogne college.
