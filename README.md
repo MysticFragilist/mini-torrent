@@ -1,4 +1,4 @@
-# turbo-torrent
+# Mini-Torrent
 A mini torrent system in CLI for linux and windows OS. The client using `./mtor-client.py` can download a file from multiple server entry point.
 
 You can use the torrent with a file.mtr as follow:
